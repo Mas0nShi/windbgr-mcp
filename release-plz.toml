@@ -6,6 +6,9 @@ changelog_update = true
 # Create a GitHub Release together with the cargo publish.
 git_release_enable = true
 git_tag_enable = true
+# This project distributes release assets from GitHub Actions; do not require
+# crates.io credentials just to create the GitHub Release.
+publish = false
 # Single-crate repo: keep the simple `vX.Y.Z` tag format.
 git_tag_name = "v{{ version }}"
 # Stable PR title so reviewers can recognise the release PR at a glance.
