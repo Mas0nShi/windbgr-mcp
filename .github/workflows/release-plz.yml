@@ -2,10 +2,11 @@ name: Release-plz
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
 
 env:
   CARGO_TERM_COLOR: always
+  TARGET: x86_64-pc-windows-msvc
 
 jobs:
   release-plz-release:
@@ -85,13 +86,13 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-pc-windows-msvc
+          targets: ${{ env.TARGET }}
 
       - name: Upload windbgr-mcp.exe to GitHub Release
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: windbgr-mcp
-          target: x86_64-pc-windows-msvc
+          target: ${{ env.TARGET }}
           archive: $bin-$tag-$target
           tar: none
           zip: windows
