@@ -1,0 +1,27 @@
+[server]
+bind = "127.0.0.1:8765"
+max_sessions = 4
+session_idle_timeout_secs = 900
+# DNS rebinding protection for the Streamable HTTP transport.
+# Leave unset to default to ["localhost", "127.0.0.1", "::1"] plus the bind host.
+# Set to an explicit list when remote clients connect via a different hostname or IP:
+# allowed_hosts = ["my-debug-host.lan", "192.168.1.10:8765"]
+# Set to an empty list to disable the protection entirely (intranet-only).
+# allowed_hosts = []
+
+[auth]
+# Either set the token inline (NOT recommended in production) ...
+# bearer_token = "replace-me"
+# ... or read it from an environment variable.
+bearer_token_env = "WINDBGR_MCP_TOKEN"
+
+[debugger]
+cdb_path = "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe"
+symbol_path = "srv*C:\\symbols*https://msdl.microsoft.com/download/symbols"
+attach_timeout_ms = 15000
+launch_timeout_ms = 15000
+command_timeout_ms = 30000
+output_ring_bytes = 524288
+
+[audit]
+jsonl_path = "logs\\audit.jsonl"

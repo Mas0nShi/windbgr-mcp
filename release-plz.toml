@@ -1,0 +1,38 @@
+[workspace]
+# Use cargo-semver-checks to flag API breaking changes in the release PR.
+semver_check = true
+# Track changelog updates next to the release PR.
+changelog_update = true
+# Create a GitHub Release together with the cargo publish.
+git_release_enable = true
+git_tag_enable = true
+# Single-crate repo: keep the simple `vX.Y.Z` tag format.
+git_tag_name = "v{{ version }}"
+# Stable PR title so reviewers can recognise the release PR at a glance.
+pr_name = "chore: release v{{ version }}"
+pr_labels = ["release"]
+
+[changelog]
+sort_commits = "newest"
+protect_breaking_commits = true
+header = """# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+"""
+
+commit_parsers = [
+    { message = "^feat", group = "Added" },
+    { message = "^fix", group = "Fixed" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Changed" },
+    { message = "^docs?", group = "Documentation" },
+    { message = "^test", group = "Tests" },
+    { message = "^chore\\(release\\):", skip = true },
+    { message = "^chore", group = "Miscellaneous" },
+    { message = "^build", group = "Build" },
+    { message = "^ci", group = "CI" },
+    { body = ".*security.*", group = "Security" },
+]

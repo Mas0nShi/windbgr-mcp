@@ -1,0 +1,99 @@
+name: Release-plz
+
+on:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release-plz-release:
+    name: Release-plz release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      # Required for crates.io Trusted Publishing (OIDC). Safe to keep even
+      # when falling back to CARGO_REGISTRY_TOKEN.
+      id-token: write
+    outputs:
+      releases_created: ${{ steps.release-plz.outputs.releases_created }}
+      releases: ${{ steps.release-plz.outputs.releases }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run release-plz
+        id: release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: only needed if Trusted Publishing is not configured on
+          # crates.io for this crate. release-plz will request an OIDC token
+          # automatically when this secret is empty.
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  upload-windows-binary:
+    name: Upload Windows x86_64 binary
+    needs: release-plz-release
+    if: needs.release-plz-release.outputs.releases_created == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Upload windbgr-mcp.exe to GitHub Release
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: windbgr-mcp
+          target: x86_64-pc-windows-msvc
+          archive: $bin-$tag-$target
+          tar: none
+          zip: windows
+          ref: refs/tags/${{ fromJSON(needs.release-plz-release.outputs.releases)[0].tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
